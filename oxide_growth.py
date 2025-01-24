@@ -1,12 +1,11 @@
 import math
 
-# Enter information here
-temperature = 920 # in Celsius
-dry = False # true or false
-t0 = 0.1 # in micrometers
-time = 2 # in hours
-
-### Don't edit below this line ###
+# Gather user input
+temperature = int(input("Enter the temperature in Celsius: "))
+dry_input = input("Is the growth dry? Enter 'yes' or 'no': ").strip().lower()
+dry = dry_input == "yes"
+t0 = float(input("Enter the initial oxide thickness in micrometers: "))
+time = float(input("Enter the growth time in hours: "))
 
 # Table 4.1
 table = [[800,0.370,0.0011,9,0,0],
@@ -23,7 +22,8 @@ for temp in range(5):
     row = temp
 
 if row == None:
-  print("Temperature does not match presaved growth conditions.")
+  print("Temperature does not match presaved growth conditions. Accepted temperatures are 800, 920, 1000, 1100, and 1200.")
+  exit()
 
 # Differentiate if dry or wet growth
 if dry:
@@ -47,4 +47,4 @@ else:
 
 # Use Equation 4.11 to find thickness of oxide
 tox = (-A + math.sqrt(A**2 + 4 * B * (time + tau)))/2
-print(round(tox*1000), "nm")
+print("The oxide thickness for these parameters is", round(tox*1000), "nm.")
