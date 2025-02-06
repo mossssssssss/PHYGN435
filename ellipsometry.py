@@ -14,17 +14,19 @@ N3 = 3.872 - 0.037j # refractive index of Si
 phi3 = cmath.asin(N2 * math.sin(phi2) / N3) # radians
 
 # Fresnel equations
-rp12 = (N2 * math.cos(phi1) - N1 * math.cos(phi2))/(N2 * math.cos(phi1) + N1 * math.cos(phi2))
-rs12 = (N1 * math.cos(phi1) - N2 * math.cos(phi2))/(N1 * math.cos(phi1) + N2 * math.cos(phi2))
-rp23 = (N3 * math.cos(phi2) - N2 * cmath.cos(phi3))/(N3 * math.cos(phi2) + N2 * cmath.cos(phi3))
-rs23 = (N2 * math.cos(phi2) - N3 * cmath.cos(phi3))/(N2 * math.cos(phi2) + N3 * cmath.cos(phi3))
+def fresnels(N1, N2, N3, phi1, phi2, phi3):
+    rp12 = (N2 * math.cos(phi1) - N1 * math.cos(phi2))/(N2 * math.cos(phi1) + N1 * math.cos(phi2))
+    rs12 = (N1 * math.cos(phi1) - N2 * math.cos(phi2))/(N1 * math.cos(phi1) + N2 * math.cos(phi2))
+    rp23 = (N3 * math.cos(phi2) - N2 * cmath.cos(phi3))/(N3 * math.cos(phi2) + N2 * cmath.cos(phi3))
+    rs23 = (N2 * math.cos(phi2) - N3 * cmath.cos(phi3))/(N2 * math.cos(phi2) + N3 * cmath.cos(phi3))
+    return rp12, rs12, rp23, rs23
 
 # Functions to calculate beta, RP, RS, Psi, and Del from equations 20, 19, 23, and 25
-def beta_func(d):
+def beta_func(d, phi2):
     beta = 2 * math.pi * (d / wavelength) * N2 * math.cos(phi2)
     return beta
 
-def RP_RS(beta):
+def RP_RS(beta, rp12, rs12, rp23, rs23):
     RP = (rp12 + rp23 * cmath.exp(-2j * beta))/(1 + rp12 * rp23 * cmath.exp(-2j * beta))
     RS = (rs12 + rs23 * cmath.exp(-2j * beta))/(1 + rs12 * rs23 * cmath.exp(-2j * beta))
     return RP, RS
@@ -37,8 +39,9 @@ def Psi_Del(RP, RS):
     return Psi, Del
 
 # Call the functions for d = 100 nm
-beta = beta_func(d)
-RP, RS = RP_RS(beta)
+rp12, rs12, rp23, rs23 = fresnels(N1, N2, N3, phi1, phi2, phi3)
+beta = beta_func(d, phi2)
+RP, RS = RP_RS(beta, rp12, rs12, rp23, rs23)
 Psi, Del = Psi_Del(RP, RS)
 print("Psi: ", Psi, "\nDel: ", Del)
 
@@ -50,8 +53,9 @@ all_dels = []
 all_psis = []
 d = 0
 for i in range(280):
-    beta = beta_func(d)
-    RP, RS = RP_RS(beta)
+    rp12, rs12, rp23, rs23 = fresnels(N1, N2, N3, phi1, phi2, phi3)
+    beta = beta_func(d, phi2)
+    RP, RS = RP_RS(beta, rp12, rs12, rp23, rs23)
     Psi, Del = Psi_Del(RP, RS)
     all_psis.append(Psi)
     all_dels.append(Del)
@@ -67,4 +71,37 @@ plt.ylim(0, 360)
 plt.xlabel('Psi (degrees)')
 plt.ylabel('Delta (degrees)')
 plt.title('Psi vs Delta')
+plt.show()
+
+n2 = 1.06
+for i in range(6):
+    del_points = []
+    psi_points = []
+    all_dels = []
+    all_psis = []
+    d = 0
+    for i in range(280):
+        rp12, rs12, rp23, rs23 = fresnels(N1, n2, N3, phi1, phi2, phi3)
+        beta = beta_func(d, phi2)
+        RP, RS = RP_RS(beta, rp12, rs12, rp23, rs23)
+        Psi, Del = Psi_Del(RP, RS)
+        all_psis.append(Psi)
+        all_dels.append(Del)
+        if d % 10 == 0:
+            del_points.append(Del)
+            psi_points.append(Psi)
+        d += 1
+
+    plt.scatter(psi_points, del_points)
+    plt.plot(all_psis, all_dels, label=f'n2 = {n2:.2f}')
+    n2 += 0.20
+
+plt.xlim(0, 90)
+plt.ylim(0, 360)
+plt.xlabel('Psi (degrees)')
+plt.ylabel('Delta (degrees)')
+plt.title('Psi vs Delta')
+plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.tight_layout()
+plt.subplots_adjust(right=0.75)
 plt.show()
